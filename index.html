@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mascot Walker</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="Mascot demo">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Extracted webmeji-style pattern</p>
+            <h1>Mascot walker</h1>
+          </div>
+          <div class="status-pill" id="statusPill">Running</div>
+        </div>
+
+        <div class="dashboard-grid" aria-hidden="true">
+          <article class="metric-card accent-teal">
+            <span>Widget</span>
+            <strong>100px</strong>
+          </article>
+          <article class="metric-card accent-coral">
+            <span>Layer</span>
+            <strong>9999</strong>
+          </article>
+          <article class="metric-card accent-violet">
+            <span>Mode</span>
+            <strong>Walk</strong>
+          </article>
+        </div>
+
+        <div class="demo-board">
+          <div class="mock-column">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="mock-map">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </div>
+        </div>
+      </section>
+
+      <aside class="control-dock" aria-label="Mascot controls">
+        <button class="icon-button" type="button" id="toggleBtn" title="Pause" aria-label="Pause">
+          <span aria-hidden="true">||</span>
+        </button>
+        <button class="icon-button" type="button" id="waveBtn" title="Wave" aria-label="Wave">
+          <span aria-hidden="true">o/</span>
+        </button>
+        <button class="icon-button" type="button" id="jumpBtn" title="Jump" aria-label="Jump">
+          <span aria-hidden="true">^</span>
+        </button>
+        <button class="icon-button" type="button" id="resetBtn" title="Reset" aria-label="Reset">
+          <span aria-hidden="true">[]</span>
+        </button>
+        <button class="icon-button" type="button" id="fallBtn" title="Drop" aria-label="Drop">
+          <span aria-hidden="true">v</span>
+        </button>
+        <button class="icon-button" type="button" id="topBtn" title="Top edge" aria-label="Top edge">
+          <span aria-hidden="true">T</span>
+        </button>
+        <button class="icon-button" type="button" id="wallBtn" title="Wall edge" aria-label="Wall edge">
+          <span aria-hidden="true">|</span>
+        </button>
+
+        <label class="range-control">
+          <span>Speed <output id="speedValue">50</output></span>
+          <input id="speedControl" type="range" min="25" max="170" step="5" value="70">
+        </label>
+        <label class="range-control">
+          <span>Size <output id="sizeValue">100</output></span>
+          <input id="sizeControl" type="range" min="64" max="140" step="4" value="100">
+        </label>
+        <label class="range-control">
+          <span>Jump <output id="jumpChanceValue">28%</output></span>
+          <input id="jumpChanceControl" type="range" min="0" max="100" step="5" value="28">
+        </label>
+        <label class="range-control">
+          <span>Interval <output id="walkDelayValue">4.3s</output></span>
+          <input id="walkDelayControl" type="range" min="1" max="12" step="0.5" value="4.3">
+        </label>
+        <label class="range-control">
+          <span>Rest <output id="restDurationValue">5s</output></span>
+          <input id="restDurationControl" type="range" min="1" max="12" step="0.5" value="5">
+        </label>
+      </aside>
+    </main>
+
+    <script type="module">
+      import { createMikuWalker } from "./miku-walker.js";
+
+      const walker = createMikuWalker({
+        size: 100,
+        speed: 50,
+        bottom: 18,
+        right: 28,
+        bubbleText: "Miku",
+        frames: {
+          stand: "./assets/miku/shime1.png",
+          walk: ["./assets/miku/shime1.png", "./assets/miku/shime2.png", "./assets/miku/shime3.png", "./assets/miku/shime2.png"],
+          idle: "./assets/miku/shime11.png",
+          rest: ["./assets/miku/shime26.png", "./assets/miku/shime27.png", "./assets/miku/shime28.png", "./assets/miku/shime27.png"],
+          wave: ["./assets/miku/shime15.png", "./assets/miku/shime16.png", "./assets/miku/shime17.png"],
+          dance: ["./assets/miku/shime5.png", "./assets/miku/shime6.png", "./assets/miku/shime1.png"],
+          trip: ["./assets/miku/shime18.png", "./assets/miku/shime19.png", "./assets/miku/shime19.png"],
+          drag: ["./assets/miku/shime7.png", "./assets/miku/shime5.png", "./assets/miku/shime8.png", "./assets/miku/shime6.png"],
+          falling: ["./assets/miku/shime10.png", "./assets/miku/shime18.png"],
+          fallen: ["./assets/miku/shime9.png", "./assets/miku/shime4.png", "./assets/miku/shime19.png"],
+          hangSide: "./assets/miku/shime12.png",
+          climbSide: ["./assets/miku/shime13.png", "./assets/miku/shime14.png"],
+          hangTop: "./assets/miku/shime23.png",
+          climbTop: ["./assets/miku/shime24.png", "./assets/miku/shime25.png"],
+          jump: "./assets/miku/shime22.png"
+        },
+        intervals: {
+          walk: 175,
+          idle: 1000,
+          rest: 500,
+          wave: 400,
+          dance: 200,
+          trip: 250,
+          drag: 210,
+          falling: 200,
+          fallen: 250,
+          hangSide: 200,
+          climbSide: 200,
+          hangTop: 200,
+          climbTop: 200,
+          jump: 200
+        }
+      });
+      window.mikuWalker = walker;
+      function runMikuCommand(detail = {}) {
+        const at = performance.now();
+        if (Number.isFinite(detail.x)) walker.x = detail.x;
+        if (Number.isFinite(detail.y)) walker.y = detail.y;
+        if (detail.command === "fall") walker.startFalling(at);
+        if (detail.command === "jumpToEdge") walker.startJumpToEdge(detail.edge || "top", at);
+        if (detail.command === "edgeIdle") walker.startEdgeIdle(detail.edge || "left", at);
+        if (detail.command === "walk") walker.startWalk(at);
+      }
+
+      window.addEventListener("miku-walker:command", (event) => {
+        runMikuCommand(event.detail || {});
+      });
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "miku-walker:command") runMikuCommand(event.data.detail || {});
+      });
+
+      const toggleBtn = document.querySelector("#toggleBtn");
+      const waveBtn = document.querySelector("#waveBtn");
+      const jumpBtn = document.querySelector("#jumpBtn");
+      const resetBtn = document.querySelector("#resetBtn");
+      const fallBtn = document.querySelector("#fallBtn");
+      const topBtn = document.querySelector("#topBtn");
+      const wallBtn = document.querySelector("#wallBtn");
+      const speedControl = document.querySelector("#speedControl");
+      const sizeControl = document.querySelector("#sizeControl");
+      const jumpChanceControl = document.querySelector("#jumpChanceControl");
+      const walkDelayControl = document.querySelector("#walkDelayControl");
+      const restDurationControl = document.querySelector("#restDurationControl");
+      const speedValue = document.querySelector("#speedValue");
+      const sizeValue = document.querySelector("#sizeValue");
+      const jumpChanceValue = document.querySelector("#jumpChanceValue");
+      const walkDelayValue = document.querySelector("#walkDelayValue");
+      const restDurationValue = document.querySelector("#restDurationValue");
+      const statusPill = document.querySelector("#statusPill");
+      speedControl.value = String(walker.getSpeed());
+      sizeControl.value = String(walker.size);
+      jumpChanceControl.value = String(walker.getJumpChancePercent());
+      walkDelayControl.value = String(walker.getWalkDelaySeconds());
+      restDurationControl.value = String(walker.getRestDurationSeconds());
+
+      function formatSeconds(value) {
+        const number = Number(value);
+        return `${number.toFixed(Number.isInteger(number) ? 0 : 1)}s`;
+      }
+
+      function syncControls() {
+        speedValue.textContent = speedControl.value;
+        sizeValue.textContent = sizeControl.value;
+        jumpChanceValue.textContent = `${jumpChanceControl.value}%`;
+        walkDelayValue.textContent = formatSeconds(walkDelayControl.value);
+        restDurationValue.textContent = formatSeconds(restDurationControl.value);
+      }
+
+      function syncState() {
+        const paused = walker.isPaused();
+        statusPill.textContent = paused ? "Paused" : "Running";
+        toggleBtn.title = paused ? "Play" : "Pause";
+        toggleBtn.setAttribute("aria-label", paused ? "Play" : "Pause");
+        toggleBtn.querySelector("span").textContent = paused ? ">" : "||";
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        walker.toggle();
+        syncState();
+      });
+      waveBtn.addEventListener("click", () => walker.wave());
+      jumpBtn.addEventListener("click", () => walker.jump());
+      resetBtn.addEventListener("click", () => walker.reset());
+      fallBtn.addEventListener("click", () => {
+        walker.y = Math.max(18, walker.floorY() - 280);
+        walker.startFalling(performance.now());
+      });
+      topBtn.addEventListener("click", () => walker.startJumpToEdge("top", performance.now()));
+      wallBtn.addEventListener("click", () => {
+        const edge = Math.random() < 0.5 ? "left" : "right";
+        walker.startJumpToEdge(edge, performance.now());
+      });
+      speedControl.addEventListener("input", (event) => {
+        walker.setSpeed(event.target.valueAsNumber);
+        syncControls();
+      });
+      sizeControl.addEventListener("input", (event) => {
+        walker.setSize(event.target.valueAsNumber);
+        syncControls();
+      });
+      jumpChanceControl.addEventListener("input", (event) => {
+        walker.setJumpChance(event.target.valueAsNumber);
+        syncControls();
+      });
+      walkDelayControl.addEventListener("input", (event) => {
+        walker.setWalkDelay(event.target.valueAsNumber);
+        syncControls();
+      });
+      restDurationControl.addEventListener("input", (event) => {
+        walker.setRestDuration(event.target.valueAsNumber);
+        syncControls();
+      });
+
+      syncControls();
+      syncState();
+    </script>
+  </body>
+</html>
