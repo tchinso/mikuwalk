@@ -1,3 +1,5 @@
+https://chromewebstore.google.com/detail/glcikgfijpjhnnlgomdhjelfejhpmaje 에도 사용됨
+
 # Mascot Walker
 
 This is a standalone implementation of the small webmeji-style mascot seen in the open Chrome tab.
