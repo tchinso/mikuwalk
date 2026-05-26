@@ -1,4 +1,9 @@
-https://chromewebstore.google.com/detail/glcikgfijpjhnnlgomdhjelfejhpmaje 에도 사용됨
+
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/glcikgfijpjhnnlgomdhjelfejhpmaje">
+    <img src="https://img.shields.io/badge/🚀_Install_Chrome_Extension-Chrome_Web_Store-4285F4?style=for-the-badge" />
+  </a>
+</p>
 
 # Mascot Walker
 
