@@ -1,3 +1,11 @@
+import {
+  DEFAULT_LANGUAGE,
+  normalizeLanguage,
+  translate,
+  applyTranslations,
+  populateLanguageSelect
+} from "./i18n.js";
+
 const DEFAULT_SETTINGS = {
   speed: 50,
   size: 100,
@@ -6,7 +14,8 @@ const DEFAULT_SETTINGS = {
   idle: 7,
   rest: 5,
   paused: false,
-  blockedPages: ""
+  blockedPages: "",
+  language: DEFAULT_LANGUAGE
 };
 
 const FIELD_FORMATTERS = {
@@ -24,21 +33,26 @@ const resetButton = document.querySelector("#resetButton");
 const optionsButton = document.querySelector("#optionsButton");
 const togglePlaybackButton = document.querySelector("#togglePlaybackButton");
 const addDomainButton = document.querySelector("#addDomainButton");
+const languageSelect = document.querySelector("#languageSelect");
 let saveTimer = 0;
+let pendingSettings = {};
 let currentHostname = "";
 let currentSettings = { ...DEFAULT_SETTINGS };
+let statusKey = "ready";
 
 function formatSeconds(value) {
   const number = Number(value);
-  return `${number.toFixed(Number.isInteger(number) ? 0 : 1)}s`;
+  const formatted = new Intl.NumberFormat(currentSettings.language, { maximumFractionDigits: 1 }).format(number);
+  return `${formatted}${translate(currentSettings.language, "secondsUnit")}`;
 }
 
 function outputFor(name) {
   return document.querySelector(`#${name}Output`);
 }
 
-function setStatus(text) {
-  saveStatus.textContent = text;
+function setStatus(key) {
+  statusKey = key;
+  saveStatus.textContent = translate(currentSettings.language, key);
 }
 
 function updateOutput(input) {
@@ -48,29 +62,45 @@ function updateOutput(input) {
 
 function applySettings(settings) {
   currentSettings = { ...DEFAULT_SETTINGS, ...settings };
+  currentSettings.language = normalizeLanguage(currentSettings.language);
   fields.forEach((input) => {
-    input.value = settings[input.name];
+    input.value = currentSettings[input.name];
     updateOutput(input);
   });
+  applyTranslations(currentSettings.language);
+  languageSelect.value = currentSettings.language;
+  setStatus(statusKey);
   syncPlaybackButton();
+  setDomainButtonState();
 }
 
 function saveSettingsNow(partial) {
   currentSettings = { ...currentSettings, ...partial };
   chrome.storage.local.set(partial, () => {
-    setStatus("Saved");
+    setStatus(Object.keys(pendingSettings).length ? "saving" : "saved");
     syncPlaybackButton();
   });
 }
 
 function scheduleSave(input) {
+  currentSettings[input.name] = input.valueAsNumber;
+  pendingSettings[input.name] = input.valueAsNumber;
   updateOutput(input);
-  setStatus("Saving");
+  setStatus("saving");
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveSettingsNow({ [input.name]: input.valueAsNumber });
-  }, 120);
+  saveTimer = setTimeout(flushPendingSettings, 120);
 }
+
+function flushPendingSettings() {
+  clearTimeout(saveTimer);
+  if (!Object.keys(pendingSettings).length) return;
+  const partial = pendingSettings;
+  pendingSettings = {};
+  saveSettingsNow(partial);
+}
+
+populateLanguageSelect(languageSelect);
+applySettings(DEFAULT_SETTINGS);
 
 chrome.storage.local.get(DEFAULT_SETTINGS, (items) => {
   applySettings({ ...DEFAULT_SETTINGS, ...items });
@@ -78,8 +108,8 @@ chrome.storage.local.get(DEFAULT_SETTINGS, (items) => {
 
 function syncPlaybackButton() {
   const paused = Boolean(currentSettings.paused);
-  togglePlaybackButton.textContent = paused ? "재생" : "정지";
-  togglePlaybackButton.setAttribute("aria-label", paused ? "Play Miku" : "Pause Miku");
+  togglePlaybackButton.textContent = translate(currentSettings.language, paused ? "play" : "pause");
+  togglePlaybackButton.setAttribute("aria-label", translate(currentSettings.language, paused ? "playLabel" : "pauseLabel"));
 }
 
 function normalizeLines(value) {
@@ -92,14 +122,14 @@ function normalizeLines(value) {
 function setDomainButtonState() {
   if (!currentHostname) {
     addDomainButton.disabled = true;
-    addDomainButton.textContent = "추가할 수 없는 페이지";
+    addDomainButton.textContent = translate(currentSettings.language, "domainUnavailable");
     return;
   }
 
   const blockedPages = normalizeLines(currentSettings.blockedPages);
   const alreadyAdded = blockedPages.some((line) => line.toLowerCase() === currentHostname.toLowerCase());
   addDomainButton.disabled = alreadyAdded;
-  addDomainButton.textContent = alreadyAdded ? "예외 목록에 추가됨" : "이 도메인을 예외 목록에 추가";
+  addDomainButton.textContent = translate(currentSettings.language, alreadyAdded ? "domainAdded" : "addDomain");
 }
 
 function loadCurrentHostname() {
@@ -119,17 +149,33 @@ function loadCurrentHostname() {
 fields.forEach((input) => {
   input.addEventListener("input", () => scheduleSave(input));
   input.addEventListener("change", () => {
-    clearTimeout(saveTimer);
-    saveSettingsNow({ [input.name]: input.valueAsNumber });
+    currentSettings[input.name] = input.valueAsNumber;
+    pendingSettings[input.name] = input.valueAsNumber;
+    flushPendingSettings();
   });
 });
 
 resetButton.addEventListener("click", () => {
-  const { blockedPages, ...defaults } = DEFAULT_SETTINGS;
-  applySettings(DEFAULT_SETTINGS);
+  clearTimeout(saveTimer);
+  pendingSettings = {};
+  const { blockedPages, language, ...defaults } = DEFAULT_SETTINGS;
+  applySettings({ ...currentSettings, ...defaults });
   chrome.storage.local.set(defaults, () => {
-    setStatus("Reset");
+    setStatus("resetStatus");
   });
+});
+
+languageSelect.addEventListener("change", () => {
+  const language = normalizeLanguage(languageSelect.value);
+  // Updating language must not replace a slider value that is waiting to save.
+  currentSettings.language = language;
+  applyTranslations(language);
+  languageSelect.value = language;
+  fields.forEach(updateOutput);
+  setStatus("saving");
+  syncPlaybackButton();
+  setDomainButtonState();
+  saveSettingsNow({ language });
 });
 
 optionsButton.addEventListener("click", () => {
@@ -155,10 +201,11 @@ addDomainButton.addEventListener("click", () => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return;
   for (const [key, change] of Object.entries(changes)) {
-    currentSettings[key] = change.newValue;
+    if (Object.hasOwn(DEFAULT_SETTINGS, key) && !Object.hasOwn(pendingSettings, key)) {
+      currentSettings[key] = change.newValue ?? DEFAULT_SETTINGS[key];
+    }
   }
-  syncPlaybackButton();
-  setDomainButtonState();
+  applySettings(currentSettings);
 });
 
 loadCurrentHostname();

@@ -6,7 +6,8 @@ const DEFAULT_SETTINGS = {
   idle: 7,
   rest: 5,
   paused: false,
-  blockedPages: ""
+  blockedPages: "",
+  language: "en"
 };
 
 const NUMBER_LIMITS = {
@@ -25,6 +26,8 @@ let shadow = null;
 let walker = null;
 let walkerModulePromise = null;
 let loadingWalker = false;
+let localization = null;
+let syncQueue = Promise.resolve();
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -99,7 +102,9 @@ function walkerOptions(settings) {
     speed: settings.speed,
     bottom: 18,
     right: 28,
-    bubbleText: "Miku",
+    bubbleText: localization.translate(settings.language, "petName"),
+    ariaLabel: localization.translate(settings.language, "mascotLabel"),
+    language: settings.language,
     jumpChance: settings.jump / 100,
     walkDelayMin: walkDelay.min,
     walkDelayMax: walkDelay.max,
@@ -113,6 +118,11 @@ function walkerOptions(settings) {
 
 function applySettings(settings) {
   if (!walker) return;
+  walker.setLabels({
+    bubbleText: localization.translate(settings.language, "petName"),
+    ariaLabel: localization.translate(settings.language, "mascotLabel"),
+    language: settings.language
+  });
   walker.setSpeed(settings.speed);
   walker.setSize(settings.size);
   walker.setJumpChance(settings.jump);
@@ -213,8 +223,12 @@ function pageIsBlocked(blockedPages) {
   });
 }
 
-async function syncWalker() {
+async function updateWalker() {
+  if (!localization) {
+    localization = await import(extensionUrl("i18n.js"));
+  }
   const settings = await getSettings();
+  settings.language = localization.normalizeLanguage(settings.language);
   if (pageIsBlocked(settings.blockedPages)) {
     destroyWalker();
     return;
@@ -222,6 +236,12 @@ async function syncWalker() {
 
   await ensureWalker(settings);
   applySettings(settings);
+}
+
+function syncWalker() {
+  // Storage changes during the initial import must apply after the walker mounts.
+  syncQueue = syncQueue.then(updateWalker, updateWalker);
+  return syncQueue;
 }
 
 function shouldHandleStorageChanges(changes) {

@@ -2,9 +2,10 @@
 "update_url": "https://clients2.google.com/service/update2/crx",
 
   "manifest_version": 3,
-  "name": "Miku Desktop Pet",
-  "version": "1.0.0",
-  "description": "Shows a small Hatsune Miku desktop pet over regular websites.",
+  "name": "__MSG_extensionName__",
+  "version": "1.1.0",
+  "default_locale": "en",
+  "description": "__MSG_extensionDescription__",
   "icons": {
     "16": "assets/miku/shime1.png",
     "32": "assets/miku/shime1.png",
@@ -12,7 +13,7 @@
     "128": "assets/miku/shime1.png"
   },
   "action": {
-    "default_title": "Miku Desktop Pet",
+    "default_title": "__MSG_extensionName__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "assets/miku/shime1.png",
@@ -42,6 +43,7 @@
     {
       "resources": [
         "miku-walker.js",
+        "i18n.js",
         "miku-walker-extension.css",
         "assets/miku/*.png"
       ],

@@ -26,6 +26,7 @@ body {
 }
 
 button,
+select,
 textarea {
   font: inherit;
 }
@@ -64,6 +65,7 @@ p {
   font-weight: 700;
 }
 
+.language-panel,
 .editor-panel {
   display: grid;
   gap: 10px;
@@ -72,6 +74,21 @@ p {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: 0 16px 38px rgba(23, 32, 38, 0.06);
+}
+
+.language-panel {
+  margin-bottom: 16px;
+}
+
+select {
+  min-height: 40px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--ink);
+  background: var(--surface);
+  cursor: pointer;
 }
 
 label {
@@ -116,6 +133,7 @@ button:hover {
 }
 
 button:focus-visible,
+select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid rgba(14, 123, 120, 0.24);
   outline-offset: 2px;

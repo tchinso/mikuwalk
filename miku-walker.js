@@ -62,6 +62,8 @@ export class MikuWalker {
       gettingUpDelay: 1800,
       respectReducedMotion: false,
       bubbleText: "Hi",
+      ariaLabel: "Mascot walker",
+      language: "en",
       frames: DEFAULT_FRAMES,
       intervals: DEFAULT_INTERVALS,
       ...options
@@ -94,7 +96,8 @@ export class MikuWalker {
     this.el = document.createElement("div");
     this.el.className = "miku-walker";
     this.el.setAttribute("role", "button");
-    this.el.setAttribute("aria-label", "Mascot walker");
+    this.el.setAttribute("aria-label", this.options.ariaLabel);
+    this.el.lang = this.options.language;
     this.el.tabIndex = 0;
     this.applySize();
 
@@ -360,6 +363,21 @@ export class MikuWalker {
 
   isPaused() {
     return this.paused;
+  }
+
+  setLabels({
+    bubbleText = this.options.bubbleText,
+    ariaLabel = this.options.ariaLabel,
+    language = this.options.language
+  } = {}) {
+    this.options.bubbleText = bubbleText;
+    this.options.ariaLabel = ariaLabel;
+    this.options.language = language;
+    if (this.bubble) this.bubble.textContent = bubbleText;
+    if (this.el) {
+      this.el.setAttribute("aria-label", ariaLabel);
+      this.el.lang = language;
+    }
   }
 
   setSpeed(speed) {

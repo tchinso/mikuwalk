@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Miku Desktop Pet Options</title>
+    <title data-i18n="optionsTitle">Miku Desktop Pet Settings</title>
     <link rel="stylesheet" href="options.css">
   </head>
   <body>
@@ -11,17 +11,24 @@
       <header>
         <img src="assets/miku/shime11.png" alt="">
         <div>
-          <h1>Hidden Pages</h1>
-          <p>Keep Miku off matching URLs or domains.</p>
+          <h1 data-i18n="hiddenPages">Hidden pages</h1>
+          <p data-i18n="hiddenPagesDescription">Hide Miku on matching URLs or domains.</p>
         </div>
       </header>
 
+      <section class="language-panel">
+        <label for="languageSelect" data-i18n="language">Language</label>
+        <select id="languageSelect">
+          <option value="en">English</option>
+        </select>
+      </section>
+
       <section class="editor-panel">
-        <label for="blockedPages">Blocked pages</label>
+        <label for="blockedPages" data-i18n="blockedPages">URLs and domains to hide on</label>
         <textarea id="blockedPages" spellcheck="false" placeholder="example.com&#10;https://example.com/private*&#10;*://*.example.org/*"></textarea>
         <div class="actions">
-          <button id="saveButton" type="button">Save</button>
-          <button id="clearButton" type="button">Clear</button>
+          <button id="saveButton" type="button" data-i18n="save">Save</button>
+          <button id="clearButton" type="button" data-i18n="clear">Clear all</button>
           <span id="saveStatus" role="status">Ready</span>
         </div>
       </section>
