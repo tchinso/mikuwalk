@@ -36,9 +36,9 @@ const DEFAULT_INTERVALS = {
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const now = () => performance.now();
 
-export function createMikuWalker(options = {}) {
+export function createMikuWalker(options = {}, parent = document.body) {
   const walker = new MikuWalker(options);
-  walker.mount();
+  walker.mount(parent);
   return walker;
 }
 
@@ -55,9 +55,12 @@ export class MikuWalker {
       jumpChance: 0.28,
       walkDelayMin: 2400,
       walkDelayMax: 6200,
+      idleDurationMin: 3000,
+      idleDurationMax: 11000,
       restDurationMin: 3000,
       restDurationMax: 7000,
       gettingUpDelay: 1800,
+      respectReducedMotion: false,
       bubbleText: "Hi",
       frames: DEFAULT_FRAMES,
       intervals: DEFAULT_INTERVALS,
@@ -111,7 +114,7 @@ export class MikuWalker {
     this.bindEvents();
     this.setFrame(this.frames.stand);
 
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (this.options.respectReducedMotion && matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this.pause();
     } else {
       this.lastTime = now();
@@ -341,8 +344,8 @@ export class MikuWalker {
   }
 
   resume() {
-    if (!this.paused) return;
     this.paused = false;
+    if (this.raf) return;
     this.lastTime = now();
     this.raf = requestAnimationFrame((time) => this.tick(time));
   }
@@ -409,6 +412,19 @@ export class MikuWalker {
     return Math.round(((this.options.restDurationMin + this.options.restDurationMax) / 2) / 100) / 10;
   }
 
+  setIdleDuration(seconds) {
+    const duration = Math.max(500, Number(seconds) * 1000);
+    this.options.idleDurationMin = Math.max(250, duration * 0.75);
+    this.options.idleDurationMax = Math.max(this.options.idleDurationMin + 250, duration * 1.25);
+    if (this.state === "idle") {
+      this.actionUntil = now() + this.randomRange(this.options.idleDurationMin, this.options.idleDurationMax);
+    }
+  }
+
+  getIdleDurationSeconds() {
+    return Math.round(((this.options.idleDurationMin + this.options.idleDurationMax) / 2) / 100) / 10;
+  }
+
   reset() {
     this.applySize();
     this.x = Math.max(this.options.edgePadding, window.innerWidth - this.currentSize - this.options.right);
@@ -459,7 +475,7 @@ export class MikuWalker {
   }
 
   actionDuration(state) {
-    if (state === "idle") return this.randomRange(3000, 11000);
+    if (state === "idle") return this.randomRange(this.options.idleDurationMin, this.options.idleDurationMax);
     if (state === "rest") return this.randomRange(this.options.restDurationMin, this.options.restDurationMax);
     if (state === "wave") return 1300;
     if (state === "dance") return 1250;

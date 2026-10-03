@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Miku Desktop Pet</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell">
+      <section class="top-actions" aria-label="Quick actions">
+        <button id="togglePlaybackButton" class="primary-action" type="button">정지</button>
+        <button id="addDomainButton" type="button">이 도메인을 예외 목록에 추가</button>
+      </section>
+
+      <header class="popup-header">
+        <img src="assets/miku/shime1.png" alt="">
+        <div>
+          <h1>Miku Pet</h1>
+          <p id="saveStatus">Ready</p>
+        </div>
+      </header>
+
+      <form id="settingsForm" class="settings-form">
+        <label class="range-row">
+          <span><strong>Speed</strong><output id="speedOutput"></output></span>
+          <input id="speedInput" name="speed" type="range" min="25" max="170" step="5">
+        </label>
+        <label class="range-row">
+          <span><strong>Size</strong><output id="sizeOutput"></output></span>
+          <input id="sizeInput" name="size" type="range" min="64" max="140" step="4">
+        </label>
+        <label class="range-row">
+          <span><strong>Jump</strong><output id="jumpOutput"></output></span>
+          <input id="jumpInput" name="jump" type="range" min="0" max="100" step="5">
+        </label>
+        <label class="range-row">
+          <span><strong>Interval</strong><output id="intervalOutput"></output></span>
+          <input id="intervalInput" name="interval" type="range" min="1" max="12" step="0.5">
+        </label>
+        <label class="range-row">
+          <span><strong>Idle</strong><output id="idleOutput"></output></span>
+          <input id="idleInput" name="idle" type="range" min="1" max="16" step="0.5">
+        </label>
+        <label class="range-row">
+          <span><strong>Rest</strong><output id="restOutput"></output></span>
+          <input id="restInput" name="rest" type="range" min="1" max="12" step="0.5">
+        </label>
+      </form>
+
+      <footer class="popup-actions">
+        <button id="resetButton" type="button">Reset</button>
+        <button id="optionsButton" type="button">Hidden pages</button>
+      </footer>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
